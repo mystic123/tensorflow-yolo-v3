@@ -8,6 +8,8 @@ _BATCH_NORM_DECAY = 0.9
 _BATCH_NORM_EPSILON = 1e-05
 _LEAKY_RELU = 0.1
 
+_ANCHORS = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]
+
 
 def darknet53(inputs):
     """
@@ -26,17 +28,19 @@ def darknet53(inputs):
     for i in range(8):
         inputs = _darknet53_block(inputs, 128)
 
+    route_1 = inputs
     inputs = _conv2d_fixed_padding(inputs, 512, 3, strides=2)
 
     for i in range(8):
         inputs = _darknet53_block(inputs, 256)
 
+    route_2 = inputs
     inputs = _conv2d_fixed_padding(inputs, 1024, 3, strides=2)
 
     for i in range(4):
         inputs = _darknet53_block(inputs, 512)
 
-    return inputs
+    return route_1, route_2, inputs
 
 
 def _conv2d_fixed_padding(inputs, filters, kernel_size, strides=1):
@@ -195,6 +199,9 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
     :param reuse: whether or not the network and its variables should be reused.
     :return:
     """
+    # it will be needed later on
+    img_size = inputs.get_shape().as_list()[1:3]
+
     # transpose the inputs to NCHW
     if data_format == 'NCHW':
         inputs = tf.transpose(inputs, [0, 3, 1, 2])
@@ -218,7 +225,35 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
         with slim.arg_scope([slim.conv2d], normalizer_fn=slim.batch_norm, normalizer_params=batch_norm_params,
                             biases_initializer=None):
             with tf.variable_scope('darknet-53'):
-                inputs = darknet53(inputs)
+                route_1, route_2, inputs = darknet53(inputs)
+
+            with tf.variable_scope('yolo-v3'):
+                route, inputs = _yolo_block(inputs, 512)
+                detect_1 = _detection_layer(inputs, num_classes, _ANCHORS[6:9], img_size, data_format)
+                detect_1 = tf.identity(detect_1, name='detect_1')
+
+                inputs = _conv2d_fixed_padding(inputs, 256, 1)
+                upsample_size = route_2.get_shape().as_list()
+                inputs = _upsample(inputs, upsample_size, data_format)
+                inputs = tf.concat([inputs, route_2], axis=1 if data_format == 'NCHW' else 3)
+
+                route, inputs = _yolo_block(inputs, 256)
+
+                detect_2 = _detection_layer(inputs, num_classes, _ANCHORS[3:6], img_size, data_format)
+                detect_2 = tf.identity(detect_2, name='detect_2')
+
+                inputs = _conv2d_fixed_padding(inputs, 128, 1)
+                upsample_size = route_1.get_shape().as_list()
+                inputs = _upsample(inputs, upsample_size, data_format)
+                inputs = tf.concat([inputs, route_1], axis=1 if data_format == 'NCHW' else 3)
+
+                _, inputs = _yolo_block(inputs, 128)
+
+                detect_3 = _detection_layer(inputs, num_classes, _ANCHORS[0:3], img_size, data_format)
+                detect_3 = tf.identity(detect_3, name='detect_3')
+
+                detections = tf.concat([detect_1, detect_2, detect_3], axis=1)
+                return detections
 
 
 def load_weights(var_list, weights_file):
