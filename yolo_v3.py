@@ -150,6 +150,39 @@ def _detection_layer(inputs, num_classes, anchors, img_size, data_format):
     return predictions
 
 
+def _upsample(inputs, out_shape, data_format='NCHW'):
+    # we need to pad with one pixel, so we set kernel_size = 3
+    inputs = _fixed_padding(inputs, 3, mode='SYMMETRIC')
+
+    # tf.image.resize_bilinear accepts input in format NHWC
+    if data_format == 'NCHW':
+        inputs = tf.transpose(inputs, [0, 2, 3, 1])
+
+    if data_format == 'NCHW':
+        height = out_shape[3]
+        width = out_shape[2]
+    else:
+        height = out_shape[2]
+        width = out_shape[1]
+
+    # we padded with 1 pixel from each side and upsample by factor of 2, so new dimensions will be
+    # greater by 4 pixels after interpolation
+    new_height = height + 4
+    new_width = width + 4
+
+    inputs = tf.image.resize_bilinear(inputs, (new_height, new_width))
+
+    # trim back to desired size
+    inputs = inputs[:, 2:-2, 2:-2, :]
+
+    # back to NCHW if needed
+    if data_format == 'NCHW':
+        inputs = tf.transpose(inputs, [0, 3, 1, 2])
+
+    inputs = tf.identity(inputs, name='upsampled')
+    return inputs
+
+
 def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False):
     """
     Creates YOLO v3 model.
