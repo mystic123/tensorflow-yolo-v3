@@ -86,6 +86,70 @@ def _fixed_padding(inputs, kernel_size, *args, mode='CONSTANT', **kwargs):
     return padded_inputs
 
 
+def _yolo_block(inputs, filters):
+    inputs = _conv2d_fixed_padding(inputs, filters, 1)
+    inputs = _conv2d_fixed_padding(inputs, filters * 2, 3)
+    inputs = _conv2d_fixed_padding(inputs, filters, 1)
+    inputs = _conv2d_fixed_padding(inputs, filters * 2, 3)
+    inputs = _conv2d_fixed_padding(inputs, filters, 1)
+    route = inputs
+    inputs = _conv2d_fixed_padding(inputs, filters * 2, 3)
+    return route, inputs
+
+
+def _get_size(shape, data_format):
+    if len(shape) == 4:
+        shape = shape[1:]
+    return shape[1:3] if data_format == 'NCHW' else shape[0:2]
+
+
+def _detection_layer(inputs, num_classes, anchors, img_size, data_format):
+    num_anchors = len(anchors)
+    predictions = slim.conv2d(inputs, num_anchors * (5 + num_classes), 1, stride=1, normalizer_fn=None,
+                              activation_fn=None, biases_initializer=tf.zeros_initializer())
+
+    shape = predictions.get_shape().as_list()
+    grid_size = _get_size(shape, data_format)
+    dim = grid_size[0] * grid_size[1]
+    bbox_attrs = 5 + num_classes
+
+    predictions = tf.reshape(predictions, [-1, num_anchors * bbox_attrs, dim])
+    predictions = tf.transpose(predictions, [0, 2, 1])
+    predictions = tf.reshape(predictions, [-1, num_anchors * dim, bbox_attrs])
+
+    stride = (img_size[0] // grid_size[0], img_size[1] // grid_size[1])
+
+    anchors = [(a[0] / stride[0], a[1] / stride[1]) for a in anchors]
+
+    box_centers, box_sizes, confidence, classes = tf.split(predictions, [2, 2, 1, num_classes], axis=-1)
+
+    box_centers = tf.nn.sigmoid(box_centers)
+    confidence = tf.nn.sigmoid(confidence)
+
+    grid_x = tf.range(grid_size[0], dtype=tf.float32)
+    grid_y = tf.range(grid_size[1], dtype=tf.float32)
+    a, b = tf.meshgrid(grid_x, grid_y)
+
+    x_offset = tf.reshape(a, (-1, 1))
+    y_offset = tf.reshape(b, (-1, 1))
+
+    x_y_offset = tf.concat([x_offset, y_offset], axis=-1)
+    x_y_offset = tf.reshape(tf.tile(x_y_offset, [1, num_anchors]), [1, -1, 2])
+
+    box_centers = box_centers + x_y_offset
+    box_centers = box_centers * stride
+
+    anchors = tf.tile(anchors, [dim, 1])
+    box_sizes = tf.exp(box_sizes) * anchors
+    box_sizes = box_sizes * stride
+
+    detections = tf.concat([box_centers, box_sizes, confidence], axis=-1)
+
+    classes = tf.nn.sigmoid(classes)
+    predictions = tf.concat([detections, classes], axis=-1)
+    return predictions
+
+
 def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False):
     """
     Creates YOLO v3 model.
