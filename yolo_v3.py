@@ -332,3 +332,30 @@ def detections_boxes(detections):
     boxes = tf.concat([x0, y0, x1, y1], axis=-1)
     detections = tf.concat([boxes, attrs], axis=-1)
     return detections
+
+
+def _iou(box1, box2):
+    """
+    Computes Intersection over Union value for 2 bounding boxes
+    
+    :param box1: array of 4 values (top left and bottom right coords): [x0, y0, x1, x2]
+    :param box2: same as box1
+    :return: IoU
+    """
+    b1_x0, b1_y0, b1_x1, b1_y1 = box1
+    b2_x0, b2_y0, b2_x1, b2_y1 = box2
+
+    int_x0 = max(b1_x0, b2_x0)
+    int_y0 = max(b1_y0, b2_y0)
+    int_x1 = min(b1_x1, b2_x1)
+    int_y1 = min(b1_y1, b2_y1)
+
+    int_area = (int_x1 - int_x0) * (int_y1 - int_y0)
+
+    b1_area = (b1_x1 - b1_x0) * (b1_y1 - b1_y0)
+    b2_area = (b2_x1 - b2_x0) * (b2_y1 - b2_y0)
+
+    # we add small epsilon of 1e-05 to avoid division by 0
+    iou = int_area / (b1_area + b2_area - int_area + 1e-05)
+    return iou
+
