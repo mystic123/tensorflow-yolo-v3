@@ -312,3 +312,23 @@ def load_weights(var_list, weights_file):
             i += 1
 
     return assign_ops
+
+
+def detections_boxes(detections):
+    """
+    Converts center x, center y, width and height values to coordinates of top left and bottom right points.
+
+    :param detections: outputs of YOLO v3 detector of shape (?, 10647, (num_classes + 5))
+    :return: converted detections of same shape as input
+    """
+    center_x, center_y, width, height, attrs = tf.split(detections, [1, 1, 1, 1, -1], axis=-1)
+    w2 = width / 2
+    h2 = height / 2
+    x0 = center_x - w2
+    y0 = center_y - h2
+    x1 = center_x + w2
+    y1 = center_y + h2
+
+    boxes = tf.concat([x0, y0, x1, y1], axis=-1)
+    detections = tf.concat([boxes, attrs], axis=-1)
+    return detections
