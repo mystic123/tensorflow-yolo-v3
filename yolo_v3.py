@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 import tensorflow as tf
 
 slim = tf.contrib.slim
@@ -358,4 +359,50 @@ def _iou(box1, box2):
     # we add small epsilon of 1e-05 to avoid division by 0
     iou = int_area / (b1_area + b2_area - int_area + 1e-05)
     return iou
+
+
+def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_threshold=0.4):
+    """
+    Applies Non-max suppression to prediction boxes.
+
+    :param predictions_with_boxes: 3D numpy array, first 4 values in 3rd dimension are bbox attrs, 5th is confidence
+    :param confidence_threshold: the threshold for deciding if prediction is valid
+    :param iou_threshold: the threshold for deciding if two boxes overlap
+    :return: dict: class -> [(box, score)]
+    """
+    conf_mask = np.expand_dims((predictions_with_boxes[:, :, 4] > confidence_threshold), -1)
+    predictions = predictions_with_boxes * conf_mask
+
+    result = {}
+    for i, image_pred in enumerate(predictions):
+        shape = image_pred.shape
+        non_zero_idxs = np.nonzero(image_pred)
+        image_pred = image_pred[non_zero_idxs]
+        image_pred = image_pred.reshape(-1, shape[-1])
+
+        bbox_attrs = image_pred[:, :5]
+        classes = image_pred[:, 5:]
+        classes = np.argmax(classes, axis=-1)
+
+        unique_classes = list(set(classes.reshape(-1)))
+
+        for cls in unique_classes:
+            cls_mask = classes == cls
+            cls_boxes = bbox_attrs[np.nonzero(cls_mask)]
+            cls_boxes = cls_boxes[cls_boxes[:, -1].argsort()[::-1]]
+            cls_scores = cls_boxes[:, -1]
+            cls_boxes = cls_boxes[:, :-1]
+
+            while len(cls_boxes) > 0:
+                box = cls_boxes[0]
+                score = cls_scores[0]
+                if not cls in result:
+                    result[cls] = []
+                result[cls].append((box, score))
+                ious = np.array([_iou(box, x) for x in cls_boxes])
+                iou_mask = ious < iou_threshold
+                cls_boxes = cls_boxes[np.nonzero(iou_mask)]
+                cls_scores = cls_scores[np.nonzero(iou_mask)]
+
+    return result
 
