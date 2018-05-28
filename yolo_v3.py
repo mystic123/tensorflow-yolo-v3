@@ -397,6 +397,7 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_thresh
                 if not cls in result:
                     result[cls] = []
                 result[cls].append((box, score))
+                cls_boxes = cls_boxes[1:]
                 ious = np.array([_iou(box, x) for x in cls_boxes])
                 iou_mask = ious < iou_threshold
                 cls_boxes = cls_boxes[np.nonzero(iou_mask)]
