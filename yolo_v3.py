@@ -219,11 +219,9 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
     }
 
     # Set activation_fn and parameters for conv2d, batch_norm.
-    with slim.arg_scope([slim.conv2d, slim.batch_norm, _fixed_padding],
-                        activation_fn=lambda x: tf.nn.leaky_relu(x, alpha=_LEAKY_RELU),
-                        data_format=data_format, reuse=reuse):
+    with slim.arg_scope([slim.conv2d, slim.batch_norm, _fixed_padding], data_format=data_format, reuse=reuse):
         with slim.arg_scope([slim.conv2d], normalizer_fn=slim.batch_norm, normalizer_params=batch_norm_params,
-                            biases_initializer=None):
+                            biases_initializer=None, activation_fn=lambda x: tf.nn.leaky_relu(x, alpha=_LEAKY_RELU)):
             with tf.variable_scope('darknet-53'):
                 route_1, route_2, inputs = darknet53(inputs)
 
