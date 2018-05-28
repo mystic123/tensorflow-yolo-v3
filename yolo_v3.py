@@ -232,7 +232,7 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
                 detect_1 = _detection_layer(inputs, num_classes, _ANCHORS[6:9], img_size, data_format)
                 detect_1 = tf.identity(detect_1, name='detect_1')
 
-                inputs = _conv2d_fixed_padding(inputs, 256, 1)
+                inputs = _conv2d_fixed_padding(route, 256, 1)
                 upsample_size = route_2.get_shape().as_list()
                 inputs = _upsample(inputs, upsample_size, data_format)
                 inputs = tf.concat([inputs, route_2], axis=1 if data_format == 'NCHW' else 3)
@@ -242,7 +242,7 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
                 detect_2 = _detection_layer(inputs, num_classes, _ANCHORS[3:6], img_size, data_format)
                 detect_2 = tf.identity(detect_2, name='detect_2')
 
-                inputs = _conv2d_fixed_padding(inputs, 128, 1)
+                inputs = _conv2d_fixed_padding(route, 128, 1)
                 upsample_size = route_1.get_shape().as_list()
                 inputs = _upsample(inputs, upsample_size, data_format)
                 inputs = tf.concat([inputs, route_1], axis=1 if data_format == 'NCHW' else 3)
