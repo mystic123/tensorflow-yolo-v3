@@ -117,8 +117,10 @@ def _detection_layer(inputs, num_classes, anchors, img_size, data_format):
     dim = grid_size[0] * grid_size[1]
     bbox_attrs = 5 + num_classes
 
-    predictions = tf.reshape(predictions, [-1, num_anchors * bbox_attrs, dim])
-    predictions = tf.transpose(predictions, [0, 2, 1])
+    if data_format == 'NCHW':
+        predictions = tf.reshape(predictions, [-1, num_anchors * bbox_attrs, dim])
+        predictions = tf.transpose(predictions, [0, 2, 1])
+
     predictions = tf.reshape(predictions, [-1, num_anchors * dim, bbox_attrs])
 
     stride = (img_size[0] // grid_size[0], img_size[1] // grid_size[1])
