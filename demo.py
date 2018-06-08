@@ -27,13 +27,13 @@ def load_coco_names(file_name):
     return names
 
 
-def draw_boxes(boxes, img, cls_names, size):
+def draw_boxes(boxes, img, cls_names, detection_size):
     draw = ImageDraw.Draw(img)
 
     for cls, bboxs in boxes.items():
         color = tuple(np.random.randint(0, 256, 3))
         for box, score in bboxs:
-            box = convert_to_original_size(box, np.array(size), np.array(img.size))
+            box = convert_to_original_size(box, np.array(detection_size), np.array(img.size))
             draw.rectangle(box, outline=color)
             draw.text(box[:2], '{} {:.2f}%'.format(cls_names[cls], score * 100), fill=color)
 
