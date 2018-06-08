@@ -194,7 +194,7 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
     Creates YOLO v3 model.
 
     :param inputs: a 4-D tensor of size [batch_size, height, width, channels].
-        Dimension batch_size may be undefined.
+        Dimension batch_size may be undefined. The channel order is RGB.
     :param num_classes: number of predicted classes.
     :param is_training: whether is training or not.
     :param data_format: data format NCHW or NHWC.
