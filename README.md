@@ -10,3 +10,8 @@ Tested on Python 3.5, Tensorflow 1.8.0 on Ubuntu 16.04.
 - [ ] Weights converter (util for exporting loaded COCO weights as TF checkpoint)
 - [ ] Training pipeline
 - [ ] More backends
+
+## How to run the demo:
+To run demo type this in the command line:
+
+`python ./demo.py --input_img <path-to-image> --output_img <name-of-output-image>`
