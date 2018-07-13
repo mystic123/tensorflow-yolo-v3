@@ -253,6 +253,7 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
                 detect_3 = tf.identity(detect_3, name='detect_3')
 
                 detections = tf.concat([detect_1, detect_2, detect_3], axis=1)
+                detections = tf.identity(detections, name='detections')
                 return detections
 
 

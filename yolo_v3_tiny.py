@@ -84,4 +84,5 @@ def yolo_v3_tiny(inputs, num_classes, is_training=False, data_format='NCHW', reu
                     detect_2 = tf.identity(detect_2, name='detect_2')
 
                     detections = tf.concat([detect_1, detect_2], axis=1)
+                    detections = tf.identity(detections, name='detections')
                     return detections

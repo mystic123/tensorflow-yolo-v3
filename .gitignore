@@ -108,3 +108,8 @@ venv.bak/
 
 # PyCharm
 .idea/
+
+*.jpg
+*.png
+coco.names
+*.weights
