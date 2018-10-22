@@ -322,7 +322,8 @@ def detections_boxes(detections):
 
     boxes = tf.concat([x0, y0, x1, y1], axis=-1)
     detections = tf.concat([boxes, attrs], axis=-1)
-    return detections
+    detections_boxes = tf.identity(detections, name='detections_boxes')
+    return detections_boxes
 
 
 def _iou(box1, box2):
