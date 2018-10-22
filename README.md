@@ -14,4 +14,6 @@ Tested on Python 3.5, Tensorflow 1.8.0 on Ubuntu 16.04.
 ## How to run the demo:
 To run demo type this in the command line:
 
-`python ./demo.py --input_img <path-to-image> --output_img <name-of-output-image>`
+First, download COCO class names: `wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names`
+
+then: `python ./demo.py --input_img <path-to-image> --output_img <name-of-output-image>`
