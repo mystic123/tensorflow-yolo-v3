@@ -328,7 +328,7 @@ def detections_boxes(detections):
 def _iou(box1, box2):
     """
     Computes Intersection over Union value for 2 bounding boxes
-    
+
     :param box1: array of 4 values (top left and bottom right coords): [x0, y0, x1, x2]
     :param box2: same as box1
     :return: IoU
@@ -390,6 +390,7 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_thresh
                     result[cls] = []
                 result[cls].append((box, score))
                 cls_boxes = cls_boxes[1:]
+                cls_scores=cls_scores[1:]
                 ious = np.array([_iou(box, x) for x in cls_boxes])
                 iou_mask = ious < iou_threshold
                 cls_boxes = cls_boxes[np.nonzero(iou_mask)]
