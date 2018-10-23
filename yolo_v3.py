@@ -329,6 +329,7 @@ def _iou(box1, box2):
     """
     Computes Intersection over Union value for 2 bounding boxes
 
+
     :param box1: array of 4 values (top left and bottom right coords): [x0, y0, x1, x2]
     :param box2: same as box1
     :return: IoU
