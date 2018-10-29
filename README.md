@@ -7,7 +7,7 @@ Tested on Python 3.5, Tensorflow 1.11.0 on Ubuntu 16.04.
 ## Todo list:
 - [x] YOLO v3 architecture
 - [x] Basic working demo
-- [ ] Weights converter (util for exporting loaded COCO weights as TF checkpoint)
+- [x] Weights converter (util for exporting loaded COCO weights as TF checkpoint)
 - [ ] Training pipeline
 - [ ] More backends
 
@@ -15,12 +15,17 @@ Tested on Python 3.5, Tensorflow 1.11.0 on Ubuntu 16.04.
 To run demo type this in the command line:
 
 1. Download COCO class names file: `wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names`
-2. Download binary file with weights from https://pjreddie.com/darknet/yolo/
+2. Download and convert model weights:    
+    1. Download binary file with weights from https://pjreddie.com/darknet/yolo/
+    2. Run `python ./convert_weights.py`
 3. Run `python ./demo.py --input_img <path-to-image> --output_img <name-of-output-image>`
 
 ## Changelog:
 #### 2018-10-29: 
 - Added weights converter from Darknet format to Tensorflow model checkpoint
+- Updated demo.py script to use TF saved checkpoint
+- Moved utility functions (load_weights, load_coco_names etc.) to utils.py
+- Added data_format flag, possible options are: NCHW (works only on GPU) / NHWC (woks on both CPU and GPU)
 #### Pre 2018-10-29: 
 - Merged PR with YOLOv3-Tiny model
-- Small bug fixes
+- Bug fixes
