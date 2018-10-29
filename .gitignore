@@ -116,3 +116,7 @@ coco.names
 
 # VSCode
 .vscode/
+
+# Tensorflow
+checkpoint
+*.ckpt.*

@@ -4,10 +4,10 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageDraw
 
-from yolo_v3 import yolo_v3, load_weights, detections_boxes, \
-    non_max_suppression
+from yolo_v3 import yolo_v3
 
-from utils import load_coco_names, draw_boxes, convert_to_original_size
+from utils import load_coco_names, draw_boxes, convert_to_original_size, \
+    load_weights, detections_boxes, non_max_suppression
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -19,6 +19,8 @@ tf.app.flags.DEFINE_string(
     'weights_file', 'yolov3.weights', 'Binary file with detector weights')
 tf.app.flags.DEFINE_string(
     'data_format', 'NCHW', 'Data format: NCHW (gpu only) / NHWC')
+tf.app.flags.DEFINE_string(
+    'ckpt_file', './saved_model/model.ckpt', 'Checkpoint file')
 
 tf.app.flags.DEFINE_integer('size', 416, 'Image size')
 
@@ -38,13 +40,14 @@ def main(argv=None):
     with tf.variable_scope('detector'):
         detections = yolo_v3(inputs, len(classes),
                              data_format=FLAGS.data_format)
-        load_ops = load_weights(tf.global_variables(
-            scope='detector'), FLAGS.weights_file)
+
+    saver = tf.train.Saver(var_list=tf.global_variables(scope='detector'))
 
     boxes = detections_boxes(detections)
 
     with tf.Session() as sess:
-        sess.run(load_ops)
+        saver.restore(sess, FLAGS.ckpt_file)
+        print('Model restored.')
 
         detected_boxes = sess.run(
             boxes, feed_dict={inputs: [np.array(img_resized, dtype=np.float32)]})
