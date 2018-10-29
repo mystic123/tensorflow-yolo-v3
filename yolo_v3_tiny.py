@@ -63,7 +63,12 @@ def yolo_v3_tiny(inputs, num_classes, is_training=False, data_format='NCHW', reu
                         if i == 4:
                             route_1 = inputs
 
-                        inputs = slim.max_pool2d(inputs, [2, 2], scope='pool2')
+                        if i == 5:
+                            inputs = slim.max_pool2d(
+                                inputs, [2, 2], stride=1, padding="SAME", scope='pool2')
+                        else:
+                            inputs = slim.max_pool2d(
+                                inputs, [2, 2], scope='pool2')
 
                     inputs = _conv2d_fixed_padding(inputs, 1024, 3)
                     inputs = _conv2d_fixed_padding(inputs, 256, 1)
