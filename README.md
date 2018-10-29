@@ -26,6 +26,7 @@ To run demo type this in the command line:
 - Updated demo.py script to use TF saved checkpoint
 - Moved utility functions (load_weights, load_coco_names etc.) to utils.py
 - Added data_format flag, possible options are: NCHW (works only on GPU) / NHWC (woks on both CPU and GPU)
+- Merged PR36, which fixes the bug with bad stride in convolutional layer in YOLOv3-Tiny. Thank you @LucasMahieu.
 #### Pre 2018-10-29: 
 - Merged PR with YOLOv3-Tiny model
 - Bug fixes
