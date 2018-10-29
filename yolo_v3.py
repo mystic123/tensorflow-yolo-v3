@@ -9,7 +9,9 @@ _BATCH_NORM_DECAY = 0.9
 _BATCH_NORM_EPSILON = 1e-05
 _LEAKY_RELU = 0.1
 
-_ANCHORS = [(10, 13), (16, 30), (33, 23), (30, 61), (62, 45), (59, 119), (116, 90), (156, 198), (373, 326)]
+_ANCHORS = [(10, 13), (16, 30), (33, 23),
+            (30, 61), (62, 45), (59, 119),
+            (116, 90), (156, 198), (373, 326)]
 
 
 def darknet53(inputs):
@@ -47,7 +49,8 @@ def darknet53(inputs):
 def _conv2d_fixed_padding(inputs, filters, kernel_size, strides=1):
     if strides > 1:
         inputs = _fixed_padding(inputs, kernel_size)
-    inputs = slim.conv2d(inputs, filters, kernel_size, stride=strides, padding=('SAME' if strides == 1 else 'VALID'))
+    inputs = slim.conv2d(inputs, filters, kernel_size, stride=strides,
+                         padding=('SAME' if strides == 1 else 'VALID'))
     return inputs
 
 
@@ -83,7 +86,9 @@ def _fixed_padding(inputs, kernel_size, *args, mode='CONSTANT', **kwargs):
 
     if kwargs['data_format'] == 'NCHW':
         padded_inputs = tf.pad(inputs, [[0, 0], [0, 0],
-                                        [pad_beg, pad_end], [pad_beg, pad_end]], mode=mode)
+                                        [pad_beg, pad_end],
+                                        [pad_beg, pad_end]],
+                               mode=mode)
     else:
         padded_inputs = tf.pad(inputs, [[0, 0], [pad_beg, pad_end],
                                         [pad_beg, pad_end], [0, 0]], mode=mode)
@@ -109,8 +114,10 @@ def _get_size(shape, data_format):
 
 def _detection_layer(inputs, num_classes, anchors, img_size, data_format):
     num_anchors = len(anchors)
-    predictions = slim.conv2d(inputs, num_anchors * (5 + num_classes), 1, stride=1, normalizer_fn=None,
-                              activation_fn=None, biases_initializer=tf.zeros_initializer())
+    predictions = slim.conv2d(inputs, num_anchors * (5 + num_classes), 1,
+                              stride=1, normalizer_fn=None,
+                              activation_fn=None,
+                              biases_initializer=tf.zeros_initializer())
 
     shape = predictions.get_shape().as_list()
     grid_size = _get_size(shape, data_format)
@@ -118,7 +125,8 @@ def _detection_layer(inputs, num_classes, anchors, img_size, data_format):
     bbox_attrs = 5 + num_classes
 
     if data_format == 'NCHW':
-        predictions = tf.reshape(predictions, [-1, num_anchors * bbox_attrs, dim])
+        predictions = tf.reshape(
+            predictions, [-1, num_anchors * bbox_attrs, dim])
         predictions = tf.transpose(predictions, [0, 2, 1])
 
     predictions = tf.reshape(predictions, [-1, num_anchors * dim, bbox_attrs])
@@ -127,7 +135,8 @@ def _detection_layer(inputs, num_classes, anchors, img_size, data_format):
 
     anchors = [(a[0] / stride[0], a[1] / stride[1]) for a in anchors]
 
-    box_centers, box_sizes, confidence, classes = tf.split(predictions, [2, 2, 1, num_classes], axis=-1)
+    box_centers, box_sizes, confidence, classes = tf.split(
+        predictions, [2, 2, 1, num_classes], axis=-1)
 
     box_centers = tf.nn.sigmoid(box_centers)
     confidence = tf.nn.sigmoid(confidence)
@@ -211,34 +220,41 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
 
     # Set activation_fn and parameters for conv2d, batch_norm.
     with slim.arg_scope([slim.conv2d, slim.batch_norm, _fixed_padding], data_format=data_format, reuse=reuse):
-        with slim.arg_scope([slim.conv2d], normalizer_fn=slim.batch_norm, normalizer_params=batch_norm_params,
-                            biases_initializer=None, activation_fn=lambda x: tf.nn.leaky_relu(x, alpha=_LEAKY_RELU)):
+        with slim.arg_scope([slim.conv2d], normalizer_fn=slim.batch_norm,
+                            normalizer_params=batch_norm_params,
+                            biases_initializer=None,
+                            activation_fn=lambda x: tf.nn.leaky_relu(x, alpha=_LEAKY_RELU)):
             with tf.variable_scope('darknet-53'):
                 route_1, route_2, inputs = darknet53(inputs)
 
             with tf.variable_scope('yolo-v3'):
                 route, inputs = _yolo_block(inputs, 512)
-                detect_1 = _detection_layer(inputs, num_classes, _ANCHORS[6:9], img_size, data_format)
+                detect_1 = _detection_layer(
+                    inputs, num_classes, _ANCHORS[6:9], img_size, data_format)
                 detect_1 = tf.identity(detect_1, name='detect_1')
 
                 inputs = _conv2d_fixed_padding(route, 256, 1)
                 upsample_size = route_2.get_shape().as_list()
                 inputs = _upsample(inputs, upsample_size, data_format)
-                inputs = tf.concat([inputs, route_2], axis=1 if data_format == 'NCHW' else 3)
+                inputs = tf.concat([inputs, route_2],
+                                   axis=1 if data_format == 'NCHW' else 3)
 
                 route, inputs = _yolo_block(inputs, 256)
 
-                detect_2 = _detection_layer(inputs, num_classes, _ANCHORS[3:6], img_size, data_format)
+                detect_2 = _detection_layer(
+                    inputs, num_classes, _ANCHORS[3:6], img_size, data_format)
                 detect_2 = tf.identity(detect_2, name='detect_2')
 
                 inputs = _conv2d_fixed_padding(route, 128, 1)
                 upsample_size = route_1.get_shape().as_list()
                 inputs = _upsample(inputs, upsample_size, data_format)
-                inputs = tf.concat([inputs, route_1], axis=1 if data_format == 'NCHW' else 3)
+                inputs = tf.concat([inputs, route_1],
+                                   axis=1 if data_format == 'NCHW' else 3)
 
                 _, inputs = _yolo_block(inputs, 128)
 
-                detect_3 = _detection_layer(inputs, num_classes, _ANCHORS[0:3], img_size, data_format)
+                detect_3 = _detection_layer(
+                    inputs, num_classes, _ANCHORS[0:3], img_size, data_format)
                 detect_3 = tf.identity(detect_3, name='detect_3')
 
                 detections = tf.concat([detect_1, detect_2, detect_3], axis=1)
@@ -276,7 +292,8 @@ def load_weights(var_list, weights_file):
                     num_params = np.prod(shape)
                     var_weights = weights[ptr:ptr + num_params].reshape(shape)
                     ptr += num_params
-                    assign_ops.append(tf.assign(var, var_weights, validate_shape=True))
+                    assign_ops.append(
+                        tf.assign(var, var_weights, validate_shape=True))
 
                 # we move the pointer by 4, because we loaded 4 variables
                 i += 4
@@ -285,9 +302,11 @@ def load_weights(var_list, weights_file):
                 bias = var2
                 bias_shape = bias.shape.as_list()
                 bias_params = np.prod(bias_shape)
-                bias_weights = weights[ptr:ptr + bias_params].reshape(bias_shape)
+                bias_weights = weights[ptr:ptr +
+                                       bias_params].reshape(bias_shape)
                 ptr += bias_params
-                assign_ops.append(tf.assign(bias, bias_weights, validate_shape=True))
+                assign_ops.append(
+                    tf.assign(bias, bias_weights, validate_shape=True))
 
                 # we loaded 1 variable
                 i += 1
@@ -295,11 +314,13 @@ def load_weights(var_list, weights_file):
             shape = var1.shape.as_list()
             num_params = np.prod(shape)
 
-            var_weights = weights[ptr:ptr + num_params].reshape((shape[3], shape[2], shape[0], shape[1]))
+            var_weights = weights[ptr:ptr + num_params].reshape(
+                (shape[3], shape[2], shape[0], shape[1]))
             # remember to transpose to column-major
             var_weights = np.transpose(var_weights, (2, 3, 1, 0))
             ptr += num_params
-            assign_ops.append(tf.assign(var1, var_weights, validate_shape=True))
+            assign_ops.append(
+                tf.assign(var1, var_weights, validate_shape=True))
             i += 1
 
     return assign_ops
@@ -312,7 +333,8 @@ def detections_boxes(detections):
     :param detections: outputs of YOLO v3 detector of shape (?, 10647, (num_classes + 5))
     :return: converted detections of same shape as input
     """
-    center_x, center_y, width, height, attrs = tf.split(detections, [1, 1, 1, 1, -1], axis=-1)
+    center_x, center_y, width, height, attrs = tf.split(
+        detections, [1, 1, 1, 1, -1], axis=-1)
     w2 = width / 2
     h2 = height / 2
     x0 = center_x - w2
@@ -360,7 +382,8 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_thresh
     :param iou_threshold: the threshold for deciding if two boxes overlap
     :return: dict: class -> [(box, score)]
     """
-    conf_mask = np.expand_dims((predictions_with_boxes[:, :, 4] > confidence_threshold), -1)
+    conf_mask = np.expand_dims(
+        (predictions_with_boxes[:, :, 4] > confidence_threshold), -1)
     predictions = predictions_with_boxes * conf_mask
 
     result = {}
@@ -386,15 +409,14 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_thresh
             while len(cls_boxes) > 0:
                 box = cls_boxes[0]
                 score = cls_scores[0]
-                if not cls in result:
+                if cls not in result:
                     result[cls] = []
                 result[cls].append((box, score))
                 cls_boxes = cls_boxes[1:]
-                cls_scores=cls_scores[1:]
+                cls_scores = cls_scores[1:]
                 ious = np.array([_iou(box, x) for x in cls_boxes])
                 iou_mask = ious < iou_threshold
                 cls_boxes = cls_boxes[np.nonzero(iou_mask)]
                 cls_scores = cls_scores[np.nonzero(iou_mask)]
 
     return result
-
