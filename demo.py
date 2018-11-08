@@ -12,7 +12,7 @@ FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('input_img', '', 'Input image')
 tf.app.flags.DEFINE_string('output_img', '', 'Output image')
-
+tf.app.flags.DEFINE_string('class_names', 'coco.names', 'File with class names')
 tf.app.flags.DEFINE_string('frozen_model', 'frozen_darknet_yolov3_model.pb', 'Frozen tensorflow protobuf model')
 
 tf.app.flags.DEFINE_integer('size', 416, 'Image size')
