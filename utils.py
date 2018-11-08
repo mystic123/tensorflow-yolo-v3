@@ -4,6 +4,38 @@ import numpy as np
 import tensorflow as tf
 from PIL import ImageDraw
 
+def load_graph(frozen_graph_filename):
+    # We load the protobuf file from the disk and parse it to retrieve the
+    # unserialized graph_def
+    with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+
+    # Then, we import the graph_def into a new Graph and returns it
+    with tf.Graph().as_default() as graph:
+        # The name var will prefix every op/nodes in your graph
+        # Since we load everything in a new graph, this is not needed
+        tf.import_graph_def(graph_def, name="")
+    return graph
+
+def freeze_graph(sess):
+
+    output_node_names = [
+        "output_boxes",
+        "inputs",
+    ]
+    output_node_names = ",".join(output_node_names)
+
+    output_graph_def = tf.graph_util.convert_variables_to_constants(
+        sess,  # The session is used to retrieve the weights
+        tf.get_default_graph().as_graph_def(),  # The graph_def is used to retrieve the nodes
+        output_node_names.split(",")  # The output node names are used to select the useful nodes
+    )
+
+    # Finally we serialize and dump the output graph to the filesystem
+    with tf.gfile.GFile(FLAGS.output_graph, "wb") as f:
+        f.write(output_graph_def.SerializeToString())
+    print("%d ops in the final graph." % len(output_graph_def.node))
 
 def load_weights(var_list, weights_file):
     """

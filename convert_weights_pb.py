@@ -6,36 +6,25 @@ import yolo_v3
 import yolo_v3_tiny
 from PIL import Image, ImageDraw
 
-from utils import load_weights, load_coco_names, detections_boxes
+from utils import load_weights, load_coco_names, detections_boxes, freeze_graph
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('class_names', 'coco.names', 'File with class names')
-tf.app.flags.DEFINE_string('weights_file', 'yolov3.weights', 'Binary file with detector weights')
-tf.app.flags.DEFINE_string('output_graph', 'frozen_darknet_yolov3_model.pb', 'Frozen tensorflow protobuf model output path')
-tf.app.flags.DEFINE_string('data_format', 'NCHW', 'Data format: NCHW (gpu only) / NHWC')
-tf.app.flags.DEFINE_integer('size', 416, 'Image size')
-tf.app.flags.DEFINE_bool('tiny', True, 'Use tiny version of YOLOv3')
+tf.app.flags.DEFINE_string(
+    'class_names', 'coco.names', 'File with class names')
+tf.app.flags.DEFINE_string(
+    'weights_file', 'yolov3.weights', 'Binary file with detector weights')
+tf.app.flags.DEFINE_string(
+    'data_format', 'NCHW', 'Data format: NCHW (gpu only) / NHWC')
+tf.app.flags.DEFINE_string(
+    'output_graph', 'frozen_darknet_yolov3_model.pb', 'Frozen tensorflow protobuf model output path')
+
+tf.app.flags.DEFINE_bool(
+    'tiny', True, 'Use tiny version of YOLOv3')
+tf.app.flags.DEFINE_integer(
+    'size', 416, 'Image size')
 
 
-def freeze_graph(sess):
-
-    output_node_names = [
-        "output_boxes",
-        "inputs",
-    ]
-    output_node_names = ",".join(output_node_names)
-
-    output_graph_def = tf.graph_util.convert_variables_to_constants(
-        sess,  # The session is used to retrieve the weights
-        tf.get_default_graph().as_graph_def(),  # The graph_def is used to retrieve the nodes
-        output_node_names.split(",")  # The output node names are used to select the useful nodes
-    )
-
-    # Finally we serialize and dump the output graph to the filesystem
-    with tf.gfile.GFile(FLAGS.output_graph, "wb") as f:
-        f.write(output_graph_def.SerializeToString())
-    print("%d ops in the final graph." % len(output_graph_def.node))
 
 def main(argv=None):
     if FLAGS.tiny:
