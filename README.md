@@ -1,32 +1,41 @@
-# tensorflow-yolo-v3
+# tensorflow-yolo-v3 (fork)
 
-Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). Full tutorial can be found [here](https://medium.com/@pawekapica_31302/implementing-yolo-v3-in-tensorflow-tf-slim-c3c55ff59dbe).
+[Original repo](https://github.com/mystic123/tensorflow-yolo-v3)
 
-Tested on Python 3.5, Tensorflow 1.11.0 on Ubuntu 16.04.
-
-## Todo list:
-- [x] YOLO v3 architecture
-- [x] Basic working demo
-- [x] Weights converter (util for exporting loaded COCO weights as TF checkpoint)
-- [ ] Training pipeline
-- [ ] More backends
+Converts the yolov3 weights to a full protobuf graph, enabling its use in other apis (e.g. the tensorflow C api).
 
 ## How to run the demo:
 To run demo type this in the command line:
 
 1. Download COCO class names file: `wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names`
 2. Download and convert model weights:    
-    1. Download binary file with weights from https://pjreddie.com/darknet/yolo/
-    2. Run `python ./convert_weights.py`
+    1. Download binary file with desired weights: 
+        1. Full weights: `wget https://pjreddie.com/media/files/yolov3.weights`
+        1. Tiny weights: `wget https://pjreddie.com/media/files/yolov3-tiny.weights` 
+    2. Run `python ./convert_weights_pb.py        
 3. Run `python ./demo.py --input_img <path-to-image> --output_img <name-of-output-image>`
 
-## Changelog:
-#### 2018-10-29: 
-- Added weights converter from Darknet format to Tensorflow model checkpoint
-- Updated demo.py script to use TF saved checkpoint
-- Moved utility functions (load_weights, load_coco_names etc.) to utils.py
-- Added data_format flag, possible options are: NCHW (works only on GPU) / NHWC (woks on both CPU and GPU)
-- Merged PR36, which fixes the bug with bad stride in convolutional layer in YOLOv3-Tiny. Thank you @LucasMahieu.
-#### Pre 2018-10-29: 
-- Merged PR with YOLOv3-Tiny model
-- Bug fixes
+
+####Optional Flags
+1. convert_weights_pb.py:
+    1. `--tiny`
+        1. Use yolov3-tiny
+    2. `--weights_file`
+        1. Path to the desired weights file
+    3. `--class_names`
+        1. Path to the class names file
+    4. `--output_graph`
+        1. Location to write the output .pb graph to
+    5. `--data_format`
+        1.  `NCHW` (gpu only) or `NHWC`
+2. demo.py
+    1. `--frozen_model`
+        1. Path to the desired frozen model
+    2. `--class_names`
+        1. Path to the class names file
+    3. `--conf_threshold`
+        1. Desired confidence threshold
+    4. `--iou_threshold`
+        1. Desired iou threshold
+    5. `--gpu_memory_fraction`
+        1. Fraction of gpu memory to work with

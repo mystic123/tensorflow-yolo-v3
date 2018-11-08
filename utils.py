@@ -86,7 +86,7 @@ def detections_boxes(detections):
     y1 = center_y + h2
 
     boxes = tf.concat([x0, y0, x1, y1], axis=-1)
-    detections = tf.concat([boxes, attrs], axis=-1)
+    detections = tf.concat([boxes, attrs], axis=-1, name="output_boxes")
     return detections
 
 
