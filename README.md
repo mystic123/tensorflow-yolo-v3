@@ -1,8 +1,4 @@
-# tensorflow-yolo-v3 (fork)
-
-Converts the yolov3 weights to a full protobuf graph, enabling its use in other apis (e.g. the tensorflow C api).
-
-[Original repo](https://github.com/mystic123/tensorflow-yolo-v3)
+# tensorflow-yolo-v3
 
 Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). Full tutorial can be found [here](https://medium.com/@pawekapica_31302/implementing-yolo-v3-in-tensorflow-tf-slim-c3c55ff59dbe).
 

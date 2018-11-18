@@ -20,7 +20,7 @@ tf.app.flags.DEFINE_string(
     'output_graph', 'frozen_darknet_yolov3_model.pb', 'Frozen tensorflow protobuf model output path')
 
 tf.app.flags.DEFINE_bool(
-    'tiny', True, 'Use tiny version of YOLOv3')
+    'tiny', False, 'Use tiny version of YOLOv3')
 tf.app.flags.DEFINE_integer(
     'size', 416, 'Image size')
 
@@ -46,7 +46,7 @@ def main(argv=None):
 
     with tf.Session() as sess:
         sess.run(load_ops)
-        freeze_graph(sess)
+        freeze_graph(sess, FLAGS.output_graph)
 
 if __name__ == '__main__':
     tf.app.run()

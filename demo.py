@@ -25,7 +25,7 @@ tf.app.flags.DEFINE_string(
 tf.app.flags.DEFINE_string(
     'ckpt_file', './saved_model/model.ckpt', 'Checkpoint file')
 tf.app.flags.DEFINE_string(
-    'frozen_model', '', 'Frozen tensorflow protobuf model')
+    'frozen_model', 'frozen_darknet_yolov3_model.pb', 'Frozen tensorflow protobuf model')
 tf.app.flags.DEFINE_bool(
     'tiny', False, 'Use tiny version of YOLOv3')
 
@@ -38,12 +38,17 @@ tf.app.flags.DEFINE_float(
     'iou_threshold', 0.4, 'IoU threshold')
 
 tf.app.flags.DEFINE_float(
-    'gpu_memory_fraction', 0.8, 'Gpu memory fraction to use')
+    'gpu_memory_fraction', 1.0, 'Gpu memory fraction to use')
 
 
 def main(argv=None):
 
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.gpu_memory_fraction)
+
+    config = tf.ConfigProto(
+        gpu_options=gpu_options,
+        log_device_placement=False,
+    )
 
     img = Image.open(FLAGS.input_img)
     img_resized = img.resize(size=(FLAGS.size, FLAGS.size))
@@ -60,13 +65,10 @@ def main(argv=None):
             boxes = tf.get_default_graph().get_tensor_by_name("output_boxes:0")
             inputs = tf.get_default_graph().get_tensor_by_name("inputs:0")
 
-        tf_session = tf.Session(
-            graph=frozenGraph,
-            config=tf.ConfigProto(
-                gpu_options=gpu_options,
-                log_device_placement=False,
-            )
-        )
+        with tf.Session(graph=frozenGraph, config=config) as sess:
+            t0 = time.time()
+            detected_boxes = sess.run(
+                boxes, feed_dict={inputs: [np.array(img_resized, dtype=np.float32)]})
 
     else:
         if FLAGS.tiny:
@@ -81,23 +83,19 @@ def main(argv=None):
             detections = model(inputs, len(classes),
                                data_format=FLAGS.data_format)
 
-        saver = tf.train.Saver(var_list=tf.global_variables(scope='detector'))
-
         boxes = detections_boxes(detections)
 
-        tf_session = tf.Session(
-            config=tf.ConfigProto(
-                gpu_options=gpu_options,
-                log_device_placement=False,
-            )
-        )
+        saver = tf.train.Saver(var_list=tf.global_variables(scope='detector'))
 
-        saver.restore(tf_session, FLAGS.ckpt_file)
-        print('Model restored.')
+        with tf.Session(config=config) as sess:
+            t0 = time.time()
+            saver.restore(sess, FLAGS.ckpt_file)
+            print('Model restored in {:.2f}s'.format(time.time()-t0))
 
-    t0 = time.time()
+            t0 = time.time()
+            detected_boxes = sess.run(
+                boxes, feed_dict={inputs: [np.array(img_resized, dtype=np.float32)]})
 
-    detected_boxes = tf_session.run(boxes, feed_dict={inputs: [np.array(img_resized, dtype=np.float32)]})
 
     filtered_boxes = non_max_suppression(detected_boxes,
                                          confidence_threshold=FLAGS.conf_threshold,
@@ -108,7 +106,6 @@ def main(argv=None):
 
     img.save(FLAGS.output_img)
 
-    tf_session.close()
 
 if __name__ == '__main__':
     tf.app.run()
