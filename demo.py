@@ -8,7 +8,7 @@ import time
 import yolo_v3
 import yolo_v3_tiny
 
-from utils import load_coco_names, draw_boxes, detections_boxes, non_max_suppression, load_graph
+from utils import load_coco_names, draw_boxes, get_boxes_and_inputs, non_max_suppression, load_graph
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -25,7 +25,7 @@ tf.app.flags.DEFINE_string(
 tf.app.flags.DEFINE_string(
     'ckpt_file', './saved_model/model.ckpt', 'Checkpoint file')
 tf.app.flags.DEFINE_string(
-    'frozen_model', 'frozen_darknet_yolov3_model.pb', 'Frozen tensorflow protobuf model')
+    'frozen_model', '', 'Frozen tensorflow protobuf model')
 tf.app.flags.DEFINE_bool(
     'tiny', False, 'Use tiny version of YOLOv3')
 
@@ -39,7 +39,6 @@ tf.app.flags.DEFINE_float(
 
 tf.app.flags.DEFINE_float(
     'gpu_memory_fraction', 1.0, 'Gpu memory fraction to use')
-
 
 def main(argv=None):
 
@@ -61,9 +60,7 @@ def main(argv=None):
         frozenGraph = load_graph(FLAGS.frozen_model)
         print("Loaded graph in {:.2f}s".format(time.time()-t0))
 
-        with frozenGraph.as_default():
-            boxes = tf.get_default_graph().get_tensor_by_name("output_boxes:0")
-            inputs = tf.get_default_graph().get_tensor_by_name("inputs:0")
+        boxes, inputs = get_boxes_and_inputs(frozenGraph)
 
         with tf.Session(graph=frozenGraph, config=config) as sess:
             t0 = time.time()
@@ -76,14 +73,7 @@ def main(argv=None):
         else:
             model = yolo_v3.yolo_v3
 
-        # placeholder for detector inputs
-        inputs = tf.placeholder(tf.float32, [1, FLAGS.size, FLAGS.size, 3])
-
-        with tf.variable_scope('detector'):
-            detections = model(inputs, len(classes),
-                               data_format=FLAGS.data_format)
-
-        boxes = detections_boxes(detections)
+        boxes, inputs = get_boxes_and_inputs(model, len(classes), FLAGS.size, FLAGS.data_format)
 
         saver = tf.train.Saver(var_list=tf.global_variables(scope='detector'))
 

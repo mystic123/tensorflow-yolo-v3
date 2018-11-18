@@ -4,6 +4,38 @@ import numpy as np
 import tensorflow as tf
 from PIL import ImageDraw
 
+
+def get_boxes_and_inputs(*args):
+
+    if len(args) == 1 and isinstance(args[0], tf.Graph):
+
+        frozenGraph = args[0]
+        with frozenGraph.as_default():
+            boxes = tf.get_default_graph().get_tensor_by_name("output_boxes:0")
+            inputs = tf.get_default_graph().get_tensor_by_name("inputs:0")
+
+        return boxes, inputs
+
+    elif len(args) == 4 and callable(args[0]) \
+            and isinstance(args[1], int)\
+            and isinstance(args[2], int)\
+            and isinstance(args[3], str):
+
+        model = args[0]; num_classes = args[1]; size = args[2]; data_format = args[3]
+
+        inputs = tf.placeholder(tf.float32, [1, size, size, 3])
+
+        with tf.variable_scope('detector'):
+            detections = model(inputs, num_classes,
+                               data_format=data_format)
+
+        boxes = detections_boxes(detections)
+
+        return boxes, inputs
+
+    else:
+        raise TypeError("Parameters should be a single tensorflow graph, or a yolo model function, an int, an int, and a string")
+
 def load_graph(frozen_graph_filename):
 
     with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
