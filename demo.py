@@ -8,7 +8,7 @@ import time
 import yolo_v3
 import yolo_v3_tiny
 
-from utils import load_coco_names, draw_boxes, get_boxes_and_inputs, non_max_suppression, load_graph
+from utils import load_coco_names, draw_boxes, get_boxes_and_inputs, get_boxes_and_inputs_pb, non_max_suppression, load_graph
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -60,7 +60,7 @@ def main(argv=None):
         frozenGraph = load_graph(FLAGS.frozen_model)
         print("Loaded graph in {:.2f}s".format(time.time()-t0))
 
-        boxes, inputs = get_boxes_and_inputs(frozenGraph)
+        boxes, inputs = get_boxes_and_inputs_pb(frozenGraph)
 
         with tf.Session(graph=frozenGraph, config=config) as sess:
             t0 = time.time()
