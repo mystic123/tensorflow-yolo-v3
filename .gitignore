@@ -113,3 +113,10 @@ venv.bak/
 *.png
 coco.names
 *.weights
+
+# VSCode
+.vscode/
+
+# Tensorflow
+checkpoint
+*.ckpt.*
