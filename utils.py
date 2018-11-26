@@ -4,6 +4,56 @@ import numpy as np
 import tensorflow as tf
 from PIL import ImageDraw, Image
 
+def get_boxes_and_inputs_pb(frozen_graph):
+
+    with frozen_graph.as_default():
+        boxes = tf.get_default_graph().get_tensor_by_name("output_boxes:0")
+        inputs = tf.get_default_graph().get_tensor_by_name("inputs:0")
+
+    return boxes, inputs
+
+def get_boxes_and_inputs(model, num_classes, size, data_format):
+
+    inputs = tf.placeholder(tf.float32, [1, size, size, 3])
+
+    with tf.variable_scope('detector'):
+        detections = model(inputs, num_classes,
+                           data_format=data_format)
+
+    boxes = detections_boxes(detections)
+
+    return boxes, inputs
+
+
+def load_graph(frozen_graph_filename):
+
+    with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+
+    with tf.Graph().as_default() as graph:
+        tf.import_graph_def(graph_def, name="")
+
+    return graph
+
+def freeze_graph(sess, output_graph):
+
+    output_node_names = [
+        "output_boxes",
+        "inputs",
+    ]
+    output_node_names = ",".join(output_node_names)
+
+    output_graph_def = tf.graph_util.convert_variables_to_constants(
+        sess,
+        tf.get_default_graph().as_graph_def(),
+        output_node_names.split(",")
+    )
+
+    with tf.gfile.GFile(output_graph, "wb") as f:
+        f.write(output_graph_def.SerializeToString())
+
+    print("{} ops written to {}.".format(len(output_graph_def.node), output_graph))
 
 def load_weights(var_list, weights_file):
     """
@@ -86,7 +136,7 @@ def detections_boxes(detections):
     y1 = center_y + h2
 
     boxes = tf.concat([x0, y0, x1, y1], axis=-1)
-    detections = tf.concat([boxes, attrs], axis=-1)
+    detections = tf.concat([boxes, attrs], axis=-1, name="output_boxes")
     return detections
 
 

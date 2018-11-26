@@ -16,17 +16,50 @@ To run demo type this in the command line:
 
 1. Download COCO class names file: `wget https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names`
 2. Download and convert model weights:    
-    1. Download binary file with weights from https://pjreddie.com/darknet/yolo/
-    2. Run `python ./convert_weights.py`
-3. Run `python ./demo.py --input_img <path-to-image> --output_img <name-of-output-image>`
+    1. Download binary file with desired weights: 
+        1. Full weights: `wget https://pjreddie.com/media/files/yolov3.weights`
+        1. Tiny weights: `wget https://pjreddie.com/media/files/yolov3-tiny.weights` 
+    2. Run `python ./convert_weights.py` and `python ./convert_weights_pb.py`        
+3. Run `python ./demo.py --input_img <path-to-image> --output_img <name-of-output-image> --frozen_model <path-to-frozen-model>`
 
-## Changelog:
-#### 2018-10-29: 
-- Added weights converter from Darknet format to Tensorflow model checkpoint
-- Updated demo.py script to use TF saved checkpoint
-- Moved utility functions (load_weights, load_coco_names etc.) to utils.py
-- Added data_format flag, possible options are: NCHW (works only on GPU) / NHWC (woks on both CPU and GPU)
-- Merged PR36, which fixes the bug with bad stride in convolutional layer in YOLOv3-Tiny. Thank you @LucasMahieu.
-#### Pre 2018-10-29: 
-- Merged PR with YOLOv3-Tiny model
-- Bug fixes
+
+####Optional Flags
+1. convert_weights:
+    1. `--class_names`
+        1. Path to the class names file
+    2. `--weights_file`
+        1. Path to the desired weights file
+    3. `--data_format`
+        1.  `NCHW` (gpu only) or `NHWC`
+    4. `--tiny`
+        1. Use yolov3-tiny
+    5. `--ckpt_file`
+        1. Output checkpoint file
+2. convert_weights_pb.py:
+    1. `--class_names`
+            1. Path to the class names file
+    2. `--weights_file`
+        1. Path to the desired weights file    
+    3. `--data_format`
+        1.  `NCHW` (gpu only) or `NHWC`
+    4. `--tiny`
+        1. Use yolov3-tiny
+    5. `--output_graph`
+        1. Location to write the output .pb graph to
+3. demo.py
+    1. `--class_names`
+        1. Path to the class names file
+    2. `--weights_file`
+        1. Path to the desired weights file
+    3. `--data_format`
+        1.  `NCHW` (gpu only) or `NHWC`
+    4. `--ckpt_file`
+        1. Path to the checkpoint file
+    5. `--frozen_model`
+        1. Path to the frozen model
+    6. `--conf_threshold`
+        1. Desired confidence threshold
+    7. `--iou_threshold`
+        1. Desired iou threshold
+    8. `--gpu_memory_fraction`
+        1. Fraction of gpu memory to work with
