@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 from PIL import ImageDraw, Image
 
+
 def get_boxes_and_inputs_pb(frozen_graph):
 
     with frozen_graph.as_default():
@@ -11,6 +12,7 @@ def get_boxes_and_inputs_pb(frozen_graph):
         inputs = tf.get_default_graph().get_tensor_by_name("inputs:0")
 
     return boxes, inputs
+
 
 def get_boxes_and_inputs(model, num_classes, size, data_format):
 
@@ -36,6 +38,7 @@ def load_graph(frozen_graph_filename):
 
     return graph
 
+
 def freeze_graph(sess, output_graph):
 
     output_node_names = [
@@ -54,6 +57,7 @@ def freeze_graph(sess, output_graph):
         f.write(output_graph_def.SerializeToString())
 
     print("{} ops written to {}.".format(len(output_graph_def.node), output_graph))
+
 
 def load_weights(var_list, weights_file):
     """
@@ -223,22 +227,28 @@ def load_coco_names(file_name):
     return names
 
 
-def draw_boxes(boxes, img, cls_names, detection_size):
+def draw_boxes(boxes, img, cls_names, detection_size, is_letter_box_image):
     draw = ImageDraw.Draw(img)
 
     for cls, bboxs in boxes.items():
         color = tuple(np.random.randint(0, 256, 3))
         for box, score in bboxs:
             box = convert_to_original_size(box, np.array(detection_size),
-                                           np.array(img.size))
+                                           np.array(img.size),
+                                           is_letter_box_image)
             draw.rectangle(box, outline=color)
             draw.text(box[:2], '{} {:.2f}%'.format(
                 cls_names[cls], score * 100), fill=color)
 
 
-def convert_to_original_size(box, size, original_size):
-    ratio = original_size / size
-    box = box.reshape(2, 2) * ratio
+def convert_to_original_size(box, size, original_size, is_letter_box_image):
+    if is_letter_box_image:
+        box = box.reshape(2, 2)
+        box[0, :] = letter_box_pos_to_original_pos(box[0, :], size, original_size)
+        box[1, :] = letter_box_pos_to_original_pos(box[1, :], size, original_size)
+    else:
+        ratio = original_size / size
+        box = box.reshape(2, 2) * ratio
     return list(box.reshape(-1))
 
 
@@ -274,7 +284,7 @@ def letter_box_pos_to_original_pos(letter_pos, current_size, ori_image_size)-> n
     Parameters should have same shape and dimension space. (Width, Height) or (Height, Width)
     :param letter_pos: The current position within letterbox image including fill value area.
     :param current_size: The size of whole image including fill value area.
-    :param ori_image_size: The size of image before being letter box.
+    :param ori_image_size: The size of image before being letter boxed.
     :return:
     """
     letter_pos = np.asarray(letter_pos, dtype=np.float)
