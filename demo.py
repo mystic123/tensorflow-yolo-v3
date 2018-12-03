@@ -8,7 +8,8 @@ import time
 import yolo_v3
 import yolo_v3_tiny
 
-from utils import load_coco_names, draw_boxes, get_boxes_and_inputs, get_boxes_and_inputs_pb, non_max_suppression, load_graph
+from utils import load_coco_names, draw_boxes, get_boxes_and_inputs, get_boxes_and_inputs_pb, non_max_suppression, \
+                  load_graph, letter_box_image
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -50,8 +51,8 @@ def main(argv=None):
     )
 
     img = Image.open(FLAGS.input_img)
-    img_resized = img.resize(size=(FLAGS.size, FLAGS.size))
-
+    img_resized = letter_box_image(img, FLAGS.size, FLAGS.size, 128)
+    img_resized = img_resized.astype(np.float32)
     classes = load_coco_names(FLAGS.class_names)
 
     if FLAGS.frozen_model:
@@ -65,7 +66,7 @@ def main(argv=None):
         with tf.Session(graph=frozenGraph, config=config) as sess:
             t0 = time.time()
             detected_boxes = sess.run(
-                boxes, feed_dict={inputs: [np.array(img_resized, dtype=np.float32)]})
+                boxes, feed_dict={inputs: [img_resized]})
 
     else:
         if FLAGS.tiny:
@@ -84,15 +85,14 @@ def main(argv=None):
 
             t0 = time.time()
             detected_boxes = sess.run(
-                boxes, feed_dict={inputs: [np.array(img_resized, dtype=np.float32)]})
-
+                boxes, feed_dict={inputs: [img_resized]})
 
     filtered_boxes = non_max_suppression(detected_boxes,
                                          confidence_threshold=FLAGS.conf_threshold,
                                          iou_threshold=FLAGS.iou_threshold)
     print("Predictions found in {:.2f}s".format(time.time() - t0))
 
-    draw_boxes(filtered_boxes, img, classes, (FLAGS.size, FLAGS.size))
+    draw_boxes(filtered_boxes, img, classes, (FLAGS.size, FLAGS.size), True)
 
     img.save(FLAGS.output_img)
 
