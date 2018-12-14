@@ -275,7 +275,7 @@ def letter_box_image(image: Image.Image, output_height: int, output_width: int, 
     to_return = np.tile(fill_value, (output_height, output_width, 1))
     pad_top = int(0.5 * (output_height - fit_height))
     pad_left = int(0.5 * (output_width - fit_width))
-    to_return[pad_top:pad_top+fit_height, pad_left:+fit_width] = fit_image
+    to_return[pad_top:pad_top+fit_height, pad_left:pad_left+fit_width] = fit_image
     return to_return
 
 
