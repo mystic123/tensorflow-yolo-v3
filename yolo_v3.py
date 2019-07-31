@@ -63,6 +63,14 @@ def _darknet53_block(inputs, filters):
     return inputs
 
 
+def _spp_block(inputs, data_format='NCHW'):
+    return tf.concat([slim.max_pool2d(inputs, 13, 1, 'SAME'),
+                      slim.max_pool2d(inputs, 9, 1, 'SAME'),
+                      slim.max_pool2d(inputs, 5, 1, 'SAME'),
+                      inputs],
+                     axis=1 if data_format == 'NCHW' else 3)
+
+
 @tf.contrib.framework.add_arg_scope
 def _fixed_padding(inputs, kernel_size, *args, mode='CONSTANT', **kwargs):
     """
@@ -95,10 +103,15 @@ def _fixed_padding(inputs, kernel_size, *args, mode='CONSTANT', **kwargs):
     return padded_inputs
 
 
-def _yolo_block(inputs, filters):
+def _yolo_block(inputs, filters, data_format='NCHW', with_spp=False):
     inputs = _conv2d_fixed_padding(inputs, filters, 1)
     inputs = _conv2d_fixed_padding(inputs, filters * 2, 3)
     inputs = _conv2d_fixed_padding(inputs, filters, 1)
+
+    if with_spp:
+        inputs = _spp_block(inputs, data_format)
+        inputs = _conv2d_fixed_padding(inputs, filters, 1)
+
     inputs = _conv2d_fixed_padding(inputs, filters * 2, 3)
     inputs = _conv2d_fixed_padding(inputs, filters, 1)
     route = inputs
@@ -187,7 +200,7 @@ def _upsample(inputs, out_shape, data_format='NCHW'):
     return inputs
 
 
-def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False):
+def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False, with_spp=False):
     """
     Creates YOLO v3 model.
 
@@ -197,6 +210,7 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
     :param is_training: whether is training or not.
     :param data_format: data format NCHW or NHWC.
     :param reuse: whether or not the network and its variables should be reused.
+    :param with_spp: whether or not is using spp layer.
     :return:
     """
     # it will be needed later on
@@ -228,7 +242,8 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
                 route_1, route_2, inputs = darknet53(inputs)
 
             with tf.variable_scope('yolo-v3'):
-                route, inputs = _yolo_block(inputs, 512)
+                route, inputs = _yolo_block(inputs, 512, data_format, with_spp)
+
                 detect_1 = _detection_layer(
                     inputs, num_classes, _ANCHORS[6:9], img_size, data_format)
                 detect_1 = tf.identity(detect_1, name='detect_1')
@@ -260,3 +275,18 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
                 detections = tf.concat([detect_1, detect_2, detect_3], axis=1)
                 detections = tf.identity(detections, name='detections')
                 return detections
+
+
+def yolo_v3_spp(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False):
+    """
+    Creates YOLO v3 with SPP  model.
+
+    :param inputs: a 4-D tensor of size [batch_size, height, width, channels].
+        Dimension batch_size may be undefined. The channel order is RGB.
+    :param num_classes: number of predicted classes.
+    :param is_training: whether is training or not.
+    :param data_format: data format NCHW or NHWC.
+    :param reuse: whether or not the network and its variables should be reused.
+    :return:
+    """
+    return yolo_v3(inputs, num_classes, is_training=is_training, data_format=data_format, reuse=reuse, with_spp=True)

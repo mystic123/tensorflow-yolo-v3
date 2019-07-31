@@ -21,6 +21,8 @@ tf.app.flags.DEFINE_string(
 
 tf.app.flags.DEFINE_bool(
     'tiny', False, 'Use tiny version of YOLOv3')
+tf.app.flags.DEFINE_bool(
+    'spp', False, 'Use SPP version of YOLOv3')
 tf.app.flags.DEFINE_integer(
     'size', 416, 'Image size')
 
@@ -29,6 +31,8 @@ tf.app.flags.DEFINE_integer(
 def main(argv=None):
     if FLAGS.tiny:
         model = yolo_v3_tiny.yolo_v3_tiny
+    elif FLAGS.spp:
+        model = yolo_v3.yolo_v3_spp
     else:
         model = yolo_v3.yolo_v3
 
