@@ -160,7 +160,7 @@ def _iou(box1, box2):
     int_x1 = min(b1_x1, b2_x1)
     int_y1 = min(b1_y1, b2_y1)
 
-    int_area = (int_x1 - int_x0) * (int_y1 - int_y0)
+    int_area = max(int_x1 - int_x0, 0) * max(int_y1 - int_y0, 0)
 
     b1_area = (b1_x1 - b1_x0) * (b1_y1 - b1_y0)
     b2_area = (b2_x1 - b2_x0) * (b2_y1 - b2_y0)
