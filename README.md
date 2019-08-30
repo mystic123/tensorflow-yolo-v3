@@ -19,6 +19,7 @@ To run demo type this in the command line:
     1. Download binary file with desired weights: 
         1. Full weights: `wget https://pjreddie.com/media/files/yolov3.weights`
         1. Tiny weights: `wget https://pjreddie.com/media/files/yolov3-tiny.weights` 
+        1. SPP weights: `wget https://pjreddie.com/media/files/yolov3-spp.weights` 
     2. Run `python ./convert_weights.py` and `python ./convert_weights_pb.py`        
 3. Run `python ./demo.py --input_img <path-to-image> --output_img <name-of-output-image> --frozen_model <path-to-frozen-model>`
 
@@ -33,7 +34,9 @@ To run demo type this in the command line:
         1.  `NCHW` (gpu only) or `NHWC`
     4. `--tiny`
         1. Use yolov3-tiny
-    5. `--ckpt_file`
+    5. `--spp`
+        1. Use yolov3-spp
+    6. `--ckpt_file`
         1. Output checkpoint file
 2. convert_weights_pb.py:
     1. `--class_names`
@@ -44,7 +47,9 @@ To run demo type this in the command line:
         1.  `NCHW` (gpu only) or `NHWC`
     4. `--tiny`
         1. Use yolov3-tiny
-    5. `--output_graph`
+    5. `--spp`
+        1. Use yolov3-spp
+    6. `--output_graph`
         1. Location to write the output .pb graph to
 3. demo.py
     1. `--class_names`
