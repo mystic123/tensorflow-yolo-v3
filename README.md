@@ -38,6 +38,8 @@ To run demo type this in the command line:
         1. Use yolov3-spp
     6. `--ckpt_file`
         1. Output checkpoint file
+    7. `--size`
+        1. Input image size
 2. convert_weights_pb.py:
     1. `--class_names`
             1. Path to the class names file
@@ -51,6 +53,8 @@ To run demo type this in the command line:
         1. Use yolov3-spp
     6. `--output_graph`
         1. Location to write the output .pb graph to
+    7. `--size`
+        1. Input image size
 3. demo.py
     1. `--class_names`
         1. Path to the class names file
@@ -68,3 +72,5 @@ To run demo type this in the command line:
         1. Desired iou threshold
     8. `--gpu_memory_fraction`
         1. Fraction of gpu memory to work with
+    9. `--size`
+        1. Input image size

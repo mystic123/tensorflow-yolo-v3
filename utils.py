@@ -20,7 +20,8 @@ def get_boxes_and_inputs(model, num_classes, size, data_format):
 
     with tf.variable_scope('detector'):
         detections = model(inputs, num_classes,
-                           data_format=data_format)
+                           data_format=data_format,
+                           img_size=[size, size])
 
     boxes = detections_boxes(detections)
 
