@@ -21,6 +21,8 @@ tf.app.flags.DEFINE_bool(
     'spp', False, 'Use SPP version of YOLOv3')
 tf.app.flags.DEFINE_string(
     'ckpt_file', './saved_model/model.ckpt', 'Chceckpoint file')
+tf.app.flags.DEFINE_integer(
+    'size', 416, 'Input Image size')
 
 
 def main(argv=None):
@@ -39,7 +41,8 @@ def main(argv=None):
 
     with tf.variable_scope('detector'):
         detections = model(inputs, len(classes),
-                           data_format=FLAGS.data_format)
+                           data_format=FLAGS.data_format,
+                           img_size=[FLAGS.size, FLAGS.size])
         load_ops = load_weights(tf.global_variables(
             scope='detector'), FLAGS.weights_file)
 

@@ -23,8 +23,9 @@ tf.app.flags.DEFINE_bool(
     'tiny', False, 'Use tiny version of YOLOv3')
 tf.app.flags.DEFINE_bool(
     'spp', False, 'Use SPP version of YOLOv3')
+
 tf.app.flags.DEFINE_integer(
-    'size', 416, 'Image size')
+    'size', 416, 'Input image size')
 
 
 
@@ -42,7 +43,7 @@ def main(argv=None):
     inputs = tf.placeholder(tf.float32, [None, FLAGS.size, FLAGS.size, 3], "inputs")
 
     with tf.variable_scope('detector'):
-        detections = model(inputs, len(classes), data_format=FLAGS.data_format)
+        detections = model(inputs, len(classes), data_format=FLAGS.data_format, img_size=[FLAGS.size, FLAGS.size])
         load_ops = load_weights(tf.global_variables(scope='detector'), FLAGS.weights_file)
 
     # Sets the output nodes in the current session

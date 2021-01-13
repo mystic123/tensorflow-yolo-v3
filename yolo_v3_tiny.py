@@ -15,7 +15,7 @@ _ANCHORS = [(10, 14),  (23, 27),  (37, 58),
             (81, 82),  (135, 169),  (344, 319)]
 
 
-def yolo_v3_tiny(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False):
+def yolo_v3_tiny(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False, img_size=[416, 416]):
     """
     Creates YOLO v3 tiny model.
 
@@ -27,8 +27,6 @@ def yolo_v3_tiny(inputs, num_classes, is_training=False, data_format='NCHW', reu
     :param reuse: whether or not the network and its variables should be reused.
     :return:
     """
-    # it will be needed later on
-    img_size = inputs.get_shape().as_list()[1:3]
 
     # transpose the inputs to NCHW
     if data_format == 'NCHW':

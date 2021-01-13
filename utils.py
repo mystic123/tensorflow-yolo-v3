@@ -20,7 +20,8 @@ def get_boxes_and_inputs(model, num_classes, size, data_format):
 
     with tf.variable_scope('detector'):
         detections = model(inputs, num_classes,
-                           data_format=data_format)
+                           data_format=data_format,
+                           img_size=[size, size])
 
     boxes = detections_boxes(detections)
 
@@ -185,10 +186,8 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_thresh
 
     result = {}
     for i, image_pred in enumerate(predictions):
-        shape = image_pred.shape
-        non_zero_idxs = np.nonzero(image_pred)
-        image_pred = image_pred[non_zero_idxs]
-        image_pred = image_pred.reshape(-1, shape[-1])
+        # Remove predictions if all the prediction vector is zero
+        image_pred = image_pred[np.any(image_pred, axis=-1)]
 
         bbox_attrs = image_pred[:, :5]
         classes = image_pred[:, 5:]

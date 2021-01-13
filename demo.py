@@ -33,7 +33,7 @@ tf.app.flags.DEFINE_bool(
     'spp', False, 'Use SPP version of YOLOv3')
 
 tf.app.flags.DEFINE_integer(
-    'size', 416, 'Image size')
+    'size', 416, 'Input image size')
 
 tf.app.flags.DEFINE_float(
     'conf_threshold', 0.5, 'Confidence threshold')

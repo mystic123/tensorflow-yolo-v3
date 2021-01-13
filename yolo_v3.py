@@ -200,7 +200,7 @@ def _upsample(inputs, out_shape, data_format='NCHW'):
     return inputs
 
 
-def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False, with_spp=False):
+def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False, with_spp=False, img_size=[416, 416]):
     """
     Creates YOLO v3 model.
 
@@ -213,8 +213,6 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
     :param with_spp: whether or not is using spp layer.
     :return:
     """
-    # it will be needed later on
-    img_size = inputs.get_shape().as_list()[1:3]
 
     # transpose the inputs to NCHW
     if data_format == 'NCHW':
@@ -277,7 +275,7 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
                 return detections
 
 
-def yolo_v3_spp(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False):
+def yolo_v3_spp(inputs, num_classes, is_training=False, data_format='NCHW', reuse=False, img_size=[416, 416]):
     """
     Creates YOLO v3 with SPP  model.
 
@@ -289,4 +287,4 @@ def yolo_v3_spp(inputs, num_classes, is_training=False, data_format='NCHW', reus
     :param reuse: whether or not the network and its variables should be reused.
     :return:
     """
-    return yolo_v3(inputs, num_classes, is_training=is_training, data_format=data_format, reuse=reuse, with_spp=True)
+    return yolo_v3(inputs, num_classes, is_training=is_training, data_format=data_format, reuse=reuse, with_spp=True, img_size=img_size)
