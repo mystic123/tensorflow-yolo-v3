@@ -222,8 +222,7 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold, iou_thresh
 def load_coco_names(file_name):
     names = {}
     with open(file_name) as f:
-        for id, name in enumerate(f):
-            names[id] = name
+        names = {id: name for id, name in enumerate(f)}
     return names
 
 
