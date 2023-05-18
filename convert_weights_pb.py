@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 import yolo_v3
 import yolo_v3_tiny
+import yolo_v3_tiny_3l
 from PIL import Image, ImageDraw
 
 from utils import load_weights, load_coco_names, detections_boxes, freeze_graph
@@ -23,6 +24,8 @@ tf.app.flags.DEFINE_bool(
     'tiny', False, 'Use tiny version of YOLOv3')
 tf.app.flags.DEFINE_bool(
     'spp', False, 'Use SPP version of YOLOv3')
+tf.app.flags.DEFINE_bool(
+    'tiny_3l', False, 'Use tiny-3l of YOLOv3')
 tf.app.flags.DEFINE_integer(
     'size', 416, 'Image size')
 
@@ -33,6 +36,8 @@ def main(argv=None):
         model = yolo_v3_tiny.yolo_v3_tiny
     elif FLAGS.spp:
         model = yolo_v3.yolo_v3_spp
+    elif FLAGS.tiny_3l:
+        model = yolo_v3_tiny_3l.yolo_v3_tiny_3l
     else:
         model = yolo_v3.yolo_v3
 
